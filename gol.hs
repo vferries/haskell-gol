@@ -1,25 +1,23 @@
 import Haste
 import Haste.Graphics.Canvas
 
-data State = Alive | Dead
-    deriving Eq
-
 type Pos = (Int, Int)
 
-type World = Pos -> State
+type World = [Pos]
 
 nextDay :: World -> World
-nextDay world pos = case countNeighbours world pos of
-    3 -> Alive
-    2 -> world pos
-    _ -> Dead
+nextDay world = filter alive [(x, y) | x <- [0..100], y <- [0..100]]
+    where alive pos = case countNeighbours world pos of
+                           3 -> True
+                           2 -> pos `elem` world
+                           _ -> False
 
 neighbours :: Pos -> [Pos]
 neighbours (x, y) = [(x+a, y+b) | a <- [-1..1], b <- [-1..1], (a, b) /= (0, 0)]
 
 countNeighbours :: World -> Pos -> Int
-countNeighbours world pos = length (filter alive (neighbours pos))
-    where alive pos = world pos == Alive
+countNeighbours world pos = length (filter present (neighbours pos))
+    where present pos = pos `elem` world
 
 squareShape :: (Double, Double) -> Shape ()
 squareShape (x, y) = do
@@ -36,12 +34,9 @@ main = do
 animate :: Canvas -> World -> IO ()
 animate can world = do
   render can $ do
-    mapM filledSquare (filter (\pos -> world pos == Alive) [(x, y) | x <- [0..2], y <- [0..2]])
-  setTimer (Once 1000) $ animate can (nextDay world)
+    mapM filledSquare world
+  setTimer (Once 100) $ animate can (nextDay world)
   return ()
 
 myWorld :: World
-myWorld (0,1) = Alive
-myWorld (1,1) = Alive
-myWorld (2,1) = Alive
-myWorld _ = Dead
+myWorld = [(49, 49), (49, 50), (49, 51), (50, 51), (51, 51), (51, 50), (51, 49)]

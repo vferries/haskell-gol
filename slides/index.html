@@ -66,46 +66,111 @@
 					<h1>Haskell</h1>
 					Haskell est un langage de programmation fonctionnelle
 					<ul>
-						<li>Typé statiquement</li>
-						<li>Pur</li>
-						<li>Inférence de type</li>
-						<li>Concurrent</li>
-						<li>Lazy</li>
+						<li class="fragment">Typé statiquement</li>
+						<li class="fragment">Pur</li>
+						<li class="fragment">Inférence de type</li>
+						<li class="fragment">Concurrent</li>
+						<li class="fragment">Lazy</li>
 					</ul>
 				</section>
 
 				<section>
 					<h1>La base</h1>
 					On commence par déclarer nos types
-<pre><code data-trim contenteditable class="haskell">
+<pre class="fragment"><code data-trim contenteditable class="haskell">
+data State = Alive | Dead
+    deriving Eq
+</code></pre>
+<pre class="fragment"><code data-trim contenteditable class="haskell">
 type Pos = (Int, Int)
 </code></pre>
-<pre><code data-trim contenteditable class="haskell">
-type World = [Pos]
+<pre class="fragment"><code data-trim contenteditable class="haskell">
+type World = Pos -> State
 </code></pre>
-<pre><code data-trim contenteditable class="haskell">
+<pre class="fragment"><code data-trim contenteditable class="haskell">
 nextDay :: World -> World
 </code></pre>
-<pre><code data-trim contenteditable class="haskell">
+<pre class="fragment"><code data-trim contenteditable class="haskell">
 neighbours :: Pos -> [Pos]
 </code></pre>
-<pre><code data-trim contenteditable class="haskell">
+<pre class="fragment"><code data-trim contenteditable class="haskell">
 countNeighbours :: World -> Pos -> Int
 </code></pre>
 				</section>
 
 				<section>
 					<h1>Implémentations</h1>
+<pre class="fragment"><code data-trim contenteditable class="haskell">
+neighbours (x, y) = [(x+a, y+b) | a <- [-1..1], b <- [-1..1], (a, b) /= (0, 0)]
+
+countNeighbours world pos = length (filter alive (neighbours pos))
+    where alive pos = world pos == Alive
+</code></pre>
+<pre class="fragment"><code data-trim contenteditable class="haskell">
+nextDay world pos = case countNeighbours world pos of
+    3 -> Alive
+    2 -> world pos
+    _ -> Dead
+</code></pre>
 				</section>
 
 				<section>
-					<h1>La limite</h1>
+					<h1>Et le 7ème jour...</h1>
+<pre><code data-trim contenteditable class="haskell">
+myWorld :: World
+myWorld (0,1) = Alive
+myWorld (1,1) = Alive
+myWorld (2,1) = Alive
+myWorld _ = Dead
+</code></pre>
+				</section>
+
+				<section>
+					<h1>Affichage</h1>
+<pre><code data-trim contenteditable class="haskell">
+squareShape :: (Double, Double) -> Shape ()
+squareShape (x, y) = do
+  rect (x * 10, y * 10) (x * 10 + 9, y * 10 + 9)
+
+filledSquare :: Pos -> Picture ()
+filledSquare (x, y) = fill (squareShape (fromIntegral x, fromIntegral y))
+</code></pre>
+				</section>
+
+				<section>
+					<h1>Affichage</h1>
+<pre><code data-trim contenteditable class="haskell">
+main :: IO ()
+main = do
+  Just can <- getCanvasById "canvas"
+  animate can myWorld
+
+animate :: Canvas -> World -> IO ()
+animate can world = do
+  render can $ do
+    mapM filledSquare (filter (\pos -> world pos == Alive) [(x, y) | x <- [0..2], y <- [0..2]])
+  setTimer (Once 1000) $ animate can (nextDay world)
+  return ()
+</code></pre>
+				</section>
+
+
+				<section>
+					<h1>Et là, c'est le drâme !</h1>
 				</section>
 
 				<section>
 					<h1>Contournement</h1>
+					Il faut conserver l'état actuel du monde
 				</section>
 
+				<section>
+					<h2>Peut mieux faire</h2>
+					<ul>
+						<li>Tests !</li>
+						<li>Performances</li>
+					</ul>
+				</section>
 			</div>
 
 		</div>
@@ -142,7 +207,7 @@ countNeighbours :: World -> Pos -> Int
 			});
 
 		</script>
-		<script src="js/gol.js"></script>
+		<!--<script src="js/gol.js"></script>-->
 
 	</body>
 </html>

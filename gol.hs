@@ -35,7 +35,7 @@ animate :: Canvas -> World -> IO ()
 animate can world = do
   render can $ do
     mapM filledSquare world
-  setTimer (Once 100) $ animate can (nextDay world)
+  setTimer (Once 5000) $ animate can (nextDay world)
   return ()
 
 myWorld :: World
